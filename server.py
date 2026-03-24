@@ -1,21 +1,37 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from prisma import Prisma
 
-app = FastAPI(title="My API", version="1.0.0")
+# Initialize Prisma database client
+db = Prisma()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Modern FastAPI lifecycle manager
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # --- Code here runs on STARTUP ---
+    print("Connecting to database...")
+    await db.connect()
+    
+    # Hand control back to FastAPI to run the server
+    yield  
+    
+    # --- Code here runs on SHUTDOWN ---
+    print("Disconnecting from database...")
+    await db.disconnect()
 
-@app.get("/")
-def root(): 
-    return {"message": "Hello, World!"}
+# Pass the lifespan function to the FastAPI app
+app = FastAPI(lifespan=lifespan)
 
-
-@app.get("/health")
-def health():
-    return {"status": "ok"}
+@app.post("/projects")
+async def create_project(user_id: str, name: str, r2_key: str):
+    # Create the project in Postgres
+    project = await db.project.create(
+        data={
+            "user_id": user_id,
+            "name": name,
+            "original_r2_key": r2_key,
+            "row_count": 1000,  # We will dynamically calculate this later!
+            "col_count": 5,     # Same for this
+        }
+    )
+    return project
