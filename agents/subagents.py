@@ -3,7 +3,6 @@ from dotenv import load_dotenv
 from deepagents import create_deep_agent
 from langchain_anthropic.chat_models import ChatAnthropic
 
-# Import the tools we just separated
 from agents.tools import (
     get_csv_summary,
     standardize_columns,
@@ -18,18 +17,13 @@ API_KEY = os.getenv("ANTHROPIC_API_KEY")
 if not API_KEY:
     raise ValueError("ANTHROPIC_API_KEY not found in .env")
 
-# Initialize the LLM (Using the correct latest Sonnet identifier)
 llm = ChatAnthropic(
     model="claude-opus-4-6",
     api_key=API_KEY,
     temperature=0,
 )
 
-# --------------------------------------------------
-# SUBAGENTS (The Specialists)
-# --------------------------------------------------
-# Deep Agents will automatically convert these dicts into subagents 
-# accessible via the main agent's `task` tool.
+
 subagents_config = [
     {
         "name": "missing-values-agent",
@@ -51,14 +45,11 @@ subagents_config = [
     }
 ]
 
-# --------------------------------------------------
-# MAIN ORCHESTRATOR
-# --------------------------------------------------
 def get_graphify_agent():
     """Returns the main orchestrator agent."""
     return create_deep_agent(
         model=llm,
-        tools=[get_csv_summary],  # Main agent can check the file itself
+        tools=[get_csv_summary], 
         subagents=subagents_config,
         system_prompt="""
 You are Graphify's Lead Data Cleaning Agent.
