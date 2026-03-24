@@ -5,15 +5,14 @@ app = FastAPI(title="My API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # restrict this in production
+    allow_origins=["*"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
 @app.get("/")
-def root():
+def root(): 
     return {"message": "Hello, World!"}
 
 
